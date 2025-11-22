@@ -177,9 +177,8 @@ const StockTrendChart = () => (
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans selection:bg-indigo-500/30">
-      {/* Add Navbar Component */}
       <Navbar />
-
+    
       <main className="max-w-7xl mx-auto px-6 py-8">
         
         {/* --- 1. NEW KPI Grid Section --- */}

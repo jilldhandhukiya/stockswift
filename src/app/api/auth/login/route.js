@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { connectDB } from '@/lib/db'
 import User from '@/models/User'
+import { setAuthCookie } from '@/lib/auth'
 
 export async function POST(request) {
   try {
@@ -36,7 +37,7 @@ export async function POST(request) {
       { expiresIn: '7d' }
     )
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       message: 'Login successful',
       token,
       user: {
@@ -45,6 +46,8 @@ export async function POST(request) {
         email: user.email
       }
     })
+    setAuthCookie(res, token)
+    return res
 
   } catch (error) {
     return NextResponse.json(
