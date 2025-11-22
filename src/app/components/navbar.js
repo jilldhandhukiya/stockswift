@@ -1,4 +1,7 @@
+"use client";
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Package, 
@@ -7,23 +10,64 @@ import {
   Bell, 
   Search,
   Settings,
+  AlertCircle,
+  MoreHorizontal,
+  CheckCircle2,
 } from 'lucide-react';
 
 
-const NavItem = ({ label, active = false, icon: Icon }) => (
-  <button className={`
-    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-    ${active 
-      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
-      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-    }
-  `}>
-    {Icon && <Icon className="w-4 h-4" />}
-    {label}
-  </button>
-);
+const NavItem = ({ label, href = "/", icon: Icon }) => {
+  const pathname = usePathname();
+  const isActive = pathname === href || (href !== "/" && pathname?.startsWith(href));
+
+  return (
+    <Link
+      href={href}
+      className={`
+        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+        ${isActive 
+          ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' 
+          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+        }
+      `}
+      aria-current={isActive ? "page" : undefined}
+    >
+      {Icon && <Icon className="w-4 h-4" />}
+      {label}
+    </Link>
+  );
+};
 
 export default function Navbar() {
+  // Notification dropdown state + refs
+  const [open, setOpen] = useState(false);
+  const [notifications] = useState([
+    { id: 1, type: 'info', title: 'New Receipt', desc: 'Steel Rods +100 kg', time: '10m' },
+    { id: 2, type: 'warn', title: 'Low Stock', desc: 'Office Chairs below reorder', time: '1h' },
+    { id: 3, type: 'alert', title: 'Damage Reported', desc: '3 kg broken steel rods', time: '2h' },
+  ]);
+  const wrapperRef = useRef(null);
+
+  // Close on outside click & ESC
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    function handleEsc(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
+  const unreadCount = notifications.length; // static for now
+
   return (
       <header className="h-16 border-b border-slate-800 bg-[#020617]/80 backdrop-blur-md sticky top-0 z-50 px-6 flex items-center justify-between">
         
@@ -37,11 +81,11 @@ export default function Navbar() {
           </div>
 
           <nav className="hidden md:flex items-center gap-1">
-            <NavItem label="Dashboard" icon={LayoutDashboard} active />
-            <NavItem label="Operations" icon={ClipboardList} />
-            <NavItem label="Stock" icon={Package} />
-            <NavItem label="Move History" icon={ArrowRightLeft} />
-            <NavItem label="Settings" icon={Settings} />
+            <NavItem label="Dashboard" icon={LayoutDashboard} href="/dashboard" />
+            <NavItem label="Operations" icon={ClipboardList} href="/operations" />
+            <NavItem label="Stock" icon={Package} href="/stock" />
+            <NavItem label="Move History" icon={ArrowRightLeft} href="/dashboard/history" />
+            <NavItem label="Settings" icon={Settings} href="/settings" />
           </nav>
         </div>
 
@@ -55,10 +99,67 @@ export default function Navbar() {
               className="bg-slate-900 border border-slate-800 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-indigo-500 w-64 transition-colors"
             />
           </div>
-          <button className="p-2 text-slate-400 hover:text-white relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-slate-900"></span>
-          </button>
+
+          {/* Noti Button + Dropdown */}
+          <div className="relative" ref={wrapperRef}>
+            <button
+              onClick={() => setOpen((s) => !s)}
+              aria-expanded={open}
+              aria-haspopup="true"
+              className="p-2 text-slate-400 hover:text-white relative"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 min-w-[14px] h-3 px-[6px] rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {open && (
+              <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-lg shadow-lg z-50 text-sm text-slate-300">
+                <div className="p-3 border-b border-slate-800 flex justify-between items-center">
+                  <div className="font-semibold text-white">Notifications</div>
+                  <button
+                    onClick={() => {/* static: no real clear */}}
+                    className="text-xs text-slate-400 hover:text-white"
+                    aria-label="Clear notifications"
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <div className="max-h-64 overflow-auto">
+                  {notifications.map((n) => (
+                    <div key={n.id} className="px-3 py-3 hover:bg-slate-800/50 transition-colors border-b border-slate-800 last:border-b-0">
+                      <div className="flex items-start gap-3">
+                        <div className="pt-0.5">
+                          {n.type === 'info' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                          {n.type === 'warn' && <AlertCircle className="w-4 h-4 text-amber-400" />}
+                          {n.type === 'alert' && <AlertCircle className="w-4 h-4 text-rose-400" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="font-medium text-white">{n.title}</div>
+                            <div className="text-xs text-slate-500">{n.time}</div>
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1">{n.desc}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {notifications.length === 0 && (
+                    <div className="px-3 py-4 text-center text-slate-500">No notifications</div>
+                  )}
+                </div>
+
+                <div className="p-3 border-t border-slate-800 text-center">
+                  <Link href="/notifications" className="text-xs text-indigo-400 hover:text-indigo-300">View all</Link>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xs cursor-pointer">
             JD
           </div>
