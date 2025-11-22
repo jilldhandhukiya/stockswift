@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Navbar from '../components/navbar';
+import { useI18n } from '@/app/components/i18n-provider'
 import { 
   LayoutDashboard, 
   Package, 
@@ -175,6 +176,7 @@ const StockTrendChart = () => (
 
 
 export default function DashboardPage() {
+  const { t } = useI18n()
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans selection:bg-indigo-500/30">
       <Navbar />
@@ -221,7 +223,7 @@ export default function DashboardPage() {
 
         {/* --- 2. Action Cards Grid --- */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Operations</h2>
+          <h2 className="text-xl font-bold text-white">{t('operations')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 mb-8">

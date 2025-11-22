@@ -57,6 +57,7 @@ These rules make AI agents productive immediately in this Next.js + MongoDB code
 - JWT storage: Currently saved to `localStorage` with no middleware/guards. Any new protected API should verify the `Authorization: Bearer <token>` header with `jsonwebtoken.verify`.
 - Session cookies: Login and signup set an HttpOnly cookie `token` for server-side verification. Protected routes can accept either `Authorization: Bearer <token>` or the `token` cookie.
 - Dependencies: If you use `bcryptjs` or `jsonwebtoken`, ensure they are installed since they aren’t in `package.json` yet.
+ - i18n: Simple in-app localization via `I18nProvider` (`src/app/components/i18n-provider.js`) and dictionaries in `src/lib/i18n.js`. Use `const { t } = useI18n()` in client components and replace static strings with `t('key')`. Toggle language through the navbar button (currently EN / HI). Add keys by extending dictionaries—fallback is English.
 
 ## Common Tasks (Examples)
 - Add a new API route:
@@ -68,6 +69,8 @@ These rules make AI agents productive immediately in this Next.js + MongoDB code
   - `const conn = await connectDB(); const doc = await Model.find(...);`
  - Protect an API route:
    - Import `{ authenticateRequest }` from `@/lib/auth`, call it with `request`, return 401 if `!ok`, otherwise use `payload.userId`.
+   - Localize a component:
+     - `import { useI18n } from '@/app/components/i18n-provider'` then `const { t } = useI18n();` and replace text: `<h1>{t('dashboard')}</h1>`.
 
 ## Build, Lint, Debug
 - Dev server (Windows cmd):

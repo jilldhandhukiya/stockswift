@@ -15,7 +15,9 @@ import {
   CheckCircle2,
   Truck,
   BarChart3,
+  Globe
 } from 'lucide-react';
+import { useI18n } from '@/app/components/i18n-provider'
 
 
 const NavItem = ({ label, href = "/", icon: Icon }) => {
@@ -104,6 +106,7 @@ const NavGroup = ({ label, icon: Icon, href, items = [] }) => {
 };
 
 export default function Navbar() {
+  const { t, locale, setLocale, locales } = useI18n()
   // Notification dropdown state + refs
   const [open, setOpen] = useState(false);
   const [notifications] = useState([
@@ -146,20 +149,20 @@ export default function Navbar() {
           </div>
 
           <nav className="hidden md:flex items-center gap-1">
-            <NavItem label="Dashboard" icon={LayoutDashboard} href="/dashboard" />
+            <NavItem label={t('dashboard')} icon={LayoutDashboard} href="/dashboard" />
             <NavGroup 
-              label="Operations" 
+              label={t('operations')} 
               icon={ClipboardList} 
               href="/operations" 
               items={[
-                { label: 'Receipts', href: '/dashboard/receipts', icon: Package },
-                { label: 'Delivery', href: '/dashboard/delivery', icon: Truck },
-                { label: 'Adjustments', href: '/dashboard/adjustments', icon: BarChart3 },
+                { label: t('receipts'), href: '/dashboard/receipts', icon: Package },
+                { label: t('delivery'), href: '/dashboard/delivery', icon: Truck },
+                { label: t('adjustments'), href: '/dashboard/adjustments', icon: BarChart3 },
               ]}
             />
-            <NavItem label="Stock" icon={Package} href="/stock" />
-            <NavItem label="Move History" icon={ArrowRightLeft} href="/dashboard/history" />
-            <NavItem label="Settings" icon={Settings} href="/settings" />
+            <NavItem label={t('stock')} icon={Package} href="/stock" />
+            <NavItem label={t('moveHistory')} icon={ArrowRightLeft} href="/dashboard/history" />
+            <NavItem label={t('settings')} icon={Settings} href="/settings" />
           </nav>
         </div>
 
@@ -234,8 +237,19 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xs cursor-pointer">
-            JD
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                onClick={() => setLocale(locale === 'en' ? 'hi' : 'en')}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                aria-label={t('language')}
+              >
+                <Globe className="w-4 h-4" /> {locale.toUpperCase()}
+              </button>
+            </div>
+            <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xs cursor-pointer">
+              JD
+            </div>
           </div>
         </div>
       </header>

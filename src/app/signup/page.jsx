@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Package, Mail, Lock, User } from 'lucide-react'
+import { useI18n } from '@/app/components/i18n-provider'
 
 export default function SignupPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -121,8 +123,8 @@ export default function SignupPage() {
 
           {/* Page Title */}
           <div className="mb-10 text-center">
-            <h2 className="text-3xl font-bold text-white mb-3">Sign up Page</h2>
-            <p className="text-slate-400">Create an account to get started</p>
+            <h2 className="text-3xl font-bold text-white mb-3">{t('signupTitle')}</h2>
+            <p className="text-slate-400">{t('signupSubtitle')}</p>
           </div>
 
           {/* Error Message */}
@@ -138,7 +140,7 @@ export default function SignupPage() {
             {/* Full Name Field */}
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-3 ml-2">
-                Enter Login Id
+                {t('nameLabel')}
               </label>
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition" />
@@ -161,7 +163,7 @@ export default function SignupPage() {
             {/* Email Field */}
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-3 ml-2">
-                Enter Email Id
+                {t('emailLabel')}
               </label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition" />
@@ -184,7 +186,7 @@ export default function SignupPage() {
             {/* Password Field */}
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-3 ml-2">
-                Enter Password
+                {t('passwordLabel')}
               </label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition" />
@@ -214,7 +216,7 @@ export default function SignupPage() {
             {/* Confirm Password Field */}
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-3 ml-2">
-                Re-Enter Password
+                {t('confirmPasswordLabel')}
               </label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition" />
@@ -247,7 +249,7 @@ export default function SignupPage() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-2xl font-semibold hover:from-blue-500 hover:to-purple-500 transition flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed mt-8 shadow-lg shadow-blue-600/20 uppercase tracking-wider"
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? '...' : t('signUp')}
             </button>
           </form>
 
