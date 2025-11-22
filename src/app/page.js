@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Head from 'next/head';
 import { 
   LayoutDashboard, 
   Box, 
@@ -62,9 +61,6 @@ export default function StockSwiftLanding() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-400 font-sans selection:bg-indigo-500/30">
-      <Head>
-        <title>StockSwift | Enterprise Inventory System</title>
-      </Head>
 
       {/* --- Navbar --- */}
       <nav className="fixed w-full z-50 bg-[#020617]/80 backdrop-blur-md border-b border-slate-800">
@@ -85,8 +81,8 @@ export default function StockSwiftLanding() {
           </div>
 
           <div className="flex gap-4">
-            <button className="text-sm font-medium hover:text-white transition-colors">Sign In</button>
-            <button className="px-4 py-2 rounded bg-slate-100 text-slate-900 text-sm font-bold hover:bg-white transition-colors">
+            <button   onClick={() => (window.location.href = "/login")} className="text-sm font-medium hover:text-white transition-colors">Sign In</button>
+            <button onClick={() => (window.location.href = "/signup")} className="px-4 py-2 rounded bg-slate-100 text-slate-900 text-sm font-bold hover:bg-white transition-colors">
               Get Started
             </button>
           </div>
