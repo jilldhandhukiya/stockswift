@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { 
@@ -18,14 +18,8 @@ import {
   X
 } from 'lucide-react';
 
-// --- Dummy Data ---
-const INVENTORY_DATA = [
-  { id: 1, name: 'Office Desk (Standard)', sku: 'FURN-001', category: 'Furniture', cost: 3000, onHand: 50, reserved: 5, reorderPoint: 10, image: '🪑' },
-  { id: 2, name: 'Ergo Chair', sku: 'FURN-002', category: 'Furniture', cost: 4500, onHand: 12, reserved: 12, reorderPoint: 15, image: '💺' },
-  { id: 3, name: 'Steel Rods (10mm)', sku: 'MAT-004', category: 'Raw Material', cost: 500, onHand: 150, reserved: 0, reorderPoint: 50, image: '🏗️' },
-  { id: 4, name: 'Monitor Arm', sku: 'ACC-023', category: 'Accessories', cost: 1200, onHand: 4, reserved: 0, reorderPoint: 5, image: '🖥️' },
-  { id: 5, name: 'Conference Table', sku: 'FURN-005', category: 'Furniture', cost: 15000, onHand: 8, reserved: 2, reorderPoint: 2, image: '🤝' },
-];
+// Runtime inventory data fetched from API
+
 
 // --- Components ---
 
@@ -49,9 +43,82 @@ const StockProgressBar = ({ current, max, isLow }) => {
 };
 
 export default function StockPage() {
+  const [items, setItems] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [tempStock, setTempStock] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ name:'', sku:'', category:'', cost:'', onHand:'', reorderPoint:'', image:'' })
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const fetchItems = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (searchTerm) params.set('search', searchTerm)
+      if (categoryFilter) params.set('category', categoryFilter)
+      const res = await fetch('/api/items?' + params.toString())
+      const data = await res.json()
+      if (res.ok) {
+        setItems(data.items)
+        setCategories(data.categories)
+      } else {
+        setError(data.message || 'Failed to load items')
+      }
+    } catch (e) {
+      setError('Network error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchItems()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, categoryFilter])
+
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target
+    setForm(f => ({ ...f, [name]: value }))
+  }
+
+  const submitCreate = async (e) => {
+    e.preventDefault()
+    setError(''); setSuccess(''); setCreating(true)
+    try {
+      const res = await fetch('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          sku: form.sku,
+          category: form.category,
+          cost: Number(form.cost),
+          onHand: Number(form.onHand || 0),
+          reorderPoint: Number(form.reorderPoint || 0),
+          image: form.image
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSuccess('Product created')
+        setCreateOpen(false)
+        setForm({ name:'', sku:'', category:'', cost:'', onHand:'', reorderPoint:'', image:'' })
+        fetchItems()
+      } else {
+        setError(data.message || 'Create failed')
+      }
+    } catch (e) {
+      setError('Network error')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   // Calculate "Free to Use"
   const calculateFree = (item) => item.onHand - item.reserved;
@@ -62,11 +129,26 @@ export default function StockPage() {
     setTempStock(item.onHand);
   };
 
-  const saveEdit = () => {
-    // Here you would make an API call to update stock
-    // Logic: Create an Inventory Adjustment [cite: 77-84]
-    setEditingId(null);
-    alert(`Stock Updated! New On Hand: ${tempStock}`);
+  const saveEdit = async () => {
+    const id = editingId
+    try {
+      const res = await fetch('/api/items/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onHand: Number(tempStock) })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setSuccess('Stock updated')
+        setItems(items.map(it => it.id === id ? data.item : it))
+      } else {
+        setError(data.message || 'Update failed')
+      }
+    } catch (e) {
+      setError('Network error')
+    } finally {
+      setEditingId(null)
+    }
   };
 
   return (
@@ -126,10 +208,14 @@ export default function StockPage() {
 
           {/* Actions */}
           <div className="flex gap-2 w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-all">
-              <Filter className="w-4 h-4" /> Filters
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg shadow-[0_0_15px_-3px_rgba(79,70,229,0.4)] transition-all">
+            <div className="flex items-center gap-2">
+              <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-300">
+                <option value="">All Categories</option>
+                {categories.map(c => <option key={c.name} value={c.name}>{c.name} ({c.count})</option>)}
+              </select>
+              <button onClick={() => { setCategoryFilter(''); setSearchTerm(''); }} className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs rounded-lg">Reset</button>
+            </div>
+            <button onClick={() => setCreateOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg shadow-[0_0_15px_-3px_rgba(79,70,229,0.4)] transition-all">
               <Plus className="w-4 h-4" /> New Product
             </button>
           </div>
@@ -150,7 +236,7 @@ export default function StockPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {INVENTORY_DATA.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => {
+                {items.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => {
                   const isLowStock = item.onHand <= item.reorderPoint;
                   const isEditing = editingId === item.id;
 
@@ -243,14 +329,77 @@ export default function StockPage() {
             </table>
             
             {/* Empty State */}
-            {INVENTORY_DATA.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                {items.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && !loading && (
               <div className="py-12 flex flex-col items-center text-slate-500">
                 <Package className="w-12 h-12 mb-4 opacity-20" />
                 <p>No products found matching &quot;{searchTerm}&quot;</p>
               </div>
             )}
+                {loading && (
+                  <div className="py-12 text-center text-slate-500">Loading...</div>
+                )}
           </div>
         </div>
+
+        {/* Create Product Modal */}
+        {createOpen && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+            <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-xl p-6 relative">
+              <button onClick={() => setCreateOpen(false)} className="absolute top-3 right-3 text-slate-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+              <h2 className="text-lg font-bold text-white mb-4">New Product</h2>
+              {error && <div className="mb-3 text-sm text-rose-400">{error}</div>}
+              {success && <div className="mb-3 text-sm text-emerald-400">{success}</div>}
+              <form onSubmit={submitCreate} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-slate-400">Name</label>
+                    <input name="name" value={form.name} onChange={handleCreateChange} required className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">SKU</label>
+                    <input name="sku" value={form.sku} onChange={handleCreateChange} required className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm uppercase" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">Category</label>
+                    <input name="category" value={form.category} onChange={handleCreateChange} required className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">Cost</label>
+                    <input name="cost" type="number" min="0" value={form.cost} onChange={handleCreateChange} required className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">On Hand</label>
+                    <input name="onHand" type="number" min="0" value={form.onHand} onChange={handleCreateChange} className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400">Reorder Point</label>
+                    <input name="reorderPoint" type="number" min="0" value={form.reorderPoint} onChange={handleCreateChange} className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-slate-400">Emoji / Image</label>
+                    <input name="image" value={form.image} onChange={handleCreateChange} placeholder="🪑" className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-2 text-sm" />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 text-sm bg-slate-800 border border-slate-700 rounded hover:bg-slate-700">Cancel</button>
+                  <button disabled={creating} className="px-4 py-2 text-sm bg-indigo-600 rounded text-white font-semibold disabled:opacity-50">
+                    {creating ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Toast Messages */}
+        {(error || success) && (
+          <div className="fixed bottom-4 right-4 space-y-2 z-50">
+            {error && <div className="px-4 py-2 bg-rose-600/20 border border-rose-600/40 text-rose-300 text-sm rounded">{error}</div>}
+            {success && <div className="px-4 py-2 bg-emerald-600/20 border border-emerald-600/40 text-emerald-300 text-sm rounded">{success}</div>}
+          </div>
+        )}
 
       </main>
     </div>
