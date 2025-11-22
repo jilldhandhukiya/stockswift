@@ -48,6 +48,8 @@ export default function ReceiptsPage() {
   const [viewMode, setViewMode] = useState('list');
   const [bulkOpen, setBulkOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -86,6 +88,20 @@ export default function ReceiptsPage() {
 
   function handleViewReceipt(id) {
     router.push(`/dashboard/receipts/${id}`);
+  }
+
+  function handleEditOpen(row) {
+    setEditData(row);
+    setEditModalOpen(true);
+    setOpenMenu(null);
+  }
+
+  function handleEditSave() {
+    if (editData) {
+      setRows(prev => prev.map(r => r.id === editData.id ? editData : r));
+      setEditModalOpen(false);
+      setEditData(null);
+    }
   }
 
   return (
@@ -246,12 +262,12 @@ export default function ReceiptsPage() {
                       <div className="flex items-center justify-end gap-3">
                         <StatusBadge status={r.status} />
                         <div className="relative">
-                          <button onClick={()=>setOpenMenu(openMenu===r.id?null:r.id)} className="p-2 text-slate-400 hover:text-white rounded-md"><MoreHorizontal className="w-4 h-4" /></button>
+                          <button onClick={()=>setOpenMenu(openMenu===r.id?null:r.id)} className="p-2 text-slate-400 hover:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"><MoreHorizontal className="w-4 h-4" /></button>
                           {openMenu===r.id && (
-                            <div className="absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-800 rounded shadow-lg z-50">
-                              <button onClick={()=>{handleViewReceipt(r.id); setOpenMenu(null);}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">View</button>
-                              <button onClick={()=>{router.push(`/dashboard/receipts/${r.id}/edit`); setOpenMenu(null);}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">Edit</button>
-                              <button onClick={()=>handleDelete(r.id)} className="w-full text-left px-3 py-2 text-sm text-rose-400 hover:bg-slate-800">Delete</button>
+                            <div className="absolute right-0 mt-2 w-44 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl z-50 flex flex-col py-2">
+                              <button onClick={()=>{handleViewReceipt(r.id); setOpenMenu(null);}} className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 transition">View</button>
+                              <button onClick={()=>handleEditOpen(r)} className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 transition">Edit</button>
+                              <button onClick={()=>handleDelete(r.id)} className="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-slate-800 transition">Delete</button>
                             </div>
                           )}
                         </div>
@@ -271,6 +287,90 @@ export default function ReceiptsPage() {
               <div className="flex justify-end gap-2">
                 <button onClick={()=>setBulkOpen(false)} className="px-3 py-1 rounded bg-slate-800 border border-slate-700">Close</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editModalOpen && editData && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">Edit Receipt</h2>
+                <button onClick={() => setEditModalOpen(false)} className="text-slate-400 hover:text-white p-1 rounded">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }} className="p-6 space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Reference</label>
+                  <input 
+                    value={editData.reference}
+                    onChange={(e) => setEditData({...editData, reference: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">From</label>
+                    <input 
+                      value={editData.from}
+                      onChange={(e) => setEditData({...editData, from: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">To</label>
+                    <input 
+                      value={editData.to}
+                      onChange={(e) => setEditData({...editData, to: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-300 mb-2">Contact</label>
+                  <input 
+                    value={editData.contact}
+                    onChange={(e) => setEditData({...editData, contact: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Schedule Date</label>
+                    <input 
+                      type="date"
+                      value={editData.schedule}
+                      onChange={(e) => setEditData({...editData, schedule: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-300 mb-2">Status</label>
+                    <select 
+                      value={editData.status}
+                      onChange={(e) => setEditData({...editData, status: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:border-indigo-500 outline-none"
+                    >
+                      <option>Ready</option>
+                      <option>Pending</option>
+                      <option>Done</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-slate-700">
+                  <button type="button" onClick={() => setEditModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">Save Changes</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
