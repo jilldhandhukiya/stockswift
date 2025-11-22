@@ -13,6 +13,8 @@ import {
   AlertCircle,
   MoreHorizontal,
   CheckCircle2,
+  Truck,
+  BarChart3,
 } from 'lucide-react';
 
 
@@ -38,6 +40,69 @@ const NavItem = ({ label, href = "/", icon: Icon }) => {
   );
 };
 
+// NavGroup - operations with submenus
+const NavGroup = ({ label, icon: Icon, href, items = [] }) => {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const opsRef = useRef(null);
+
+  const isActive = pathname === href || (href !== "/" && pathname?.startsWith(href));
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (opsRef.current && !opsRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    function handleEsc(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, []);
+
+  return (
+    <div className="relative" ref={opsRef}>
+      <button
+        onClick={() => setOpen((s) => !s)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        className={`
+          flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+          ${isActive ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}
+        `}
+      >
+        {Icon && <Icon className="w-4 h-4" />}
+        <span>{label}</span>
+        <MoreHorizontal className="w-4 h-4 ml-1 text-slate-400" />
+      </button>
+
+      {open && (
+        <div className="absolute mt-2 left-0 w-56 bg-slate-900 border border-slate-800 rounded-lg shadow-lg py-2 z-50">
+          {items.map((it) => {
+            const itemActive = pathname === it.href || pathname?.startsWith(it.href);
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${itemActive ? 'bg-indigo-500/10 text-indigo-400' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => setOpen(false)}
+              >
+                {it.icon && <it.icon className="w-4 h-4" />}
+                <span>{it.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Navbar() {
   // Notification dropdown state + refs
   const [open, setOpen] = useState(false);
@@ -48,7 +113,7 @@ export default function Navbar() {
   ]);
   const wrapperRef = useRef(null);
 
-  // Close on outside click & ESC
+  // Close on outside click & ESC (notification)
   useEffect(() => {
     function handleClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -82,7 +147,16 @@ export default function Navbar() {
 
           <nav className="hidden md:flex items-center gap-1">
             <NavItem label="Dashboard" icon={LayoutDashboard} href="/dashboard" />
-            <NavItem label="Operations" icon={ClipboardList} href="/operations" />
+            <NavGroup 
+              label="Operations" 
+              icon={ClipboardList} 
+              href="/operations" 
+              items={[
+                { label: 'Receipts', href: '/dashboard/receipts', icon: Package },
+                { label: 'Delivery', href: '/dashboard/delivery', icon: Truck },
+                { label: 'Adjustments', href: '/dashboard/adjustments', icon: BarChart3 },
+              ]}
+            />
             <NavItem label="Stock" icon={Package} href="/stock" />
             <NavItem label="Move History" icon={ArrowRightLeft} href="/dashboard/history" />
             <NavItem label="Settings" icon={Settings} href="/settings" />

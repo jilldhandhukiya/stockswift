@@ -247,16 +247,6 @@ export default function DashboardPage() {
             colorTheme="blue"
           />
           <ActionCard 
-            title="Internal Transfers"
-            href="/dashboard/transfers"
-            primaryLabel="To Move"
-            primaryCount={8}
-            lateCount={0}
-            waitingCount={1}
-            scheduledCount={12}
-            colorTheme="indigo"
-          />
-          <ActionCard 
             title="Stock Adjustments"
             href="/dashboard/adjustments"
             primaryLabel="To Verify"
