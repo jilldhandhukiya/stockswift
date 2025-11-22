@@ -6,6 +6,7 @@ import {
   ClipboardList, 
   Bell, 
   Search,
+  Settings,
 } from 'lucide-react';
 
 
@@ -40,6 +41,7 @@ export default function Navbar() {
             <NavItem label="Operations" icon={ClipboardList} />
             <NavItem label="Stock" icon={Package} />
             <NavItem label="Move History" icon={ArrowRightLeft} />
+            <NavItem label="Settings" icon={Settings} />
           </nav>
         </div>
 
