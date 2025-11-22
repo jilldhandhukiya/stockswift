@@ -1,6 +1,6 @@
 "use client"
 import React, { useMemo, useState } from "react";
-import Navbar from "../components/navbar";
+import Navbar from "../../components/navbar";
 import { Search, Calendar, MoreHorizontal, Eye, List } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

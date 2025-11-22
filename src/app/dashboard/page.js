@@ -238,7 +238,7 @@ export default function DashboardPage() {
           />
           <ActionCard 
             title="Delivery Orders"
-            href="/dashboard/deliveries"
+            href="/dashboard/delivery"
             primaryLabel="To Deliver"
             primaryCount={4}
             lateCount={1}
