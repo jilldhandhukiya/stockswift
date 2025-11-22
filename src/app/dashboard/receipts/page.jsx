@@ -5,16 +5,16 @@ import { Search, Calendar, MoreHorizontal, Eye, List } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const sampleRows = [
-  { reference: "WH/IN/0001", from: "vendor", to: "WH/Stock1", contact: "Azure Integrations", schedule: "2025-11-22", status: "Ready" },
-  { reference: "WH/IN/0002", from: "vendor", to: "WH/Stock1", contact: "Clever Aardvark", schedule: "2025-11-25", status: "Pending" },
-  { reference: "WH/OUT/0003", from: "customer", to: "WH/Stock2", contact: "Productive Bat", schedule: "2025-11-30", status: "Done" },
-  { reference: "WH/IN/0004", from: "vendor", to: "WH/Main", contact: "Neon Fox", schedule: "2025-12-02", status: "Ready" },
-  { reference: "WH/IN/0005", from: "partner", to: "WH/Secondary", contact: "Green Finch", schedule: "2025-12-05", status: "Pending" },
-  { reference: "WH/OUT/0006", from: "customer", to: "WH/Main", contact: "Blue Heron", schedule: "2025-12-10", status: "Done" },
-  { reference: "WH/IN/0007", from: "vendor", to: "WH/Stock1", contact: "Crimson Orca", schedule: "2025-12-12", status: "Ready" },
-  { reference: "WH/IN/0008", from: "vendor", to: "WH/Overflow", contact: "Silver Lynx", schedule: "2025-12-18", status: "Pending" },
-  { reference: "WH/OUT/0009", from: "customer", to: "WH/Dispatch", contact: "Golden Toad", schedule: "2025-12-22", status: "Done" },
-  { reference: "WH/IN/0010", from: "partner", to: "WH/Stock3", contact: "Velvet Ant", schedule: "2026-01-04", status: "Ready" },
+  { id: "1", reference: "WH/IN/0001", from: "vendor", to: "WH/Stock1", contact: "Azure Integrations", schedule: "2025-11-22", status: "Ready" },
+  { id: "2", reference: "WH/IN/0002", from: "vendor", to: "WH/Stock1", contact: "Clever Aardvark", schedule: "2025-11-25", status: "Pending" },
+  { id: "3", reference: "WH/OUT/0003", from: "customer", to: "WH/Stock2", contact: "Productive Bat", schedule: "2025-11-30", status: "Done" },
+  { id: "4", reference: "WH/IN/0004", from: "vendor", to: "WH/Main", contact: "Neon Fox", schedule: "2025-12-02", status: "Ready" },
+  { id: "5", reference: "WH/IN/0005", from: "partner", to: "WH/Secondary", contact: "Green Finch", schedule: "2025-12-05", status: "Pending" },
+  { id: "6", reference: "WH/OUT/0006", from: "customer", to: "WH/Main", contact: "Blue Heron", schedule: "2025-12-10", status: "Done" },
+  { id: "7", reference: "WH/IN/0007", from: "vendor", to: "WH/Stock1", contact: "Crimson Orca", schedule: "2025-12-12", status: "Ready" },
+  { id: "8", reference: "WH/IN/0008", from: "vendor", to: "WH/Overflow", contact: "Silver Lynx", schedule: "2025-12-18", status: "Pending" },
+  { id: "9", reference: "WH/OUT/0009", from: "customer", to: "WH/Dispatch", contact: "Golden Toad", schedule: "2025-12-22", status: "Done" },
+  { id: "10", reference: "WH/IN/0010", from: "partner", to: "WH/Stock3", contact: "Velvet Ant", schedule: "2026-01-04", status: "Ready" },
 ];
 
 function StatusBadge({ status }) {
@@ -23,8 +23,6 @@ function StatusBadge({ status }) {
   if (status === "Done") return <span className={`${base} bg-indigo-500 text-white`}>{status}</span>;
   return <span className={`${base} bg-amber-400 text-black`}>{status}</span>;
 }
-
-// use lucide-react icons for consistent styling
 
 function Avatar({ name }) {
   const initials = name
@@ -77,13 +75,17 @@ export default function ReceiptsPage() {
     URL.revokeObjectURL(url);
   }
 
-  function handleDelete(ref) {
-    setRows(prev => prev.filter(r => r.reference !== ref));
+  function handleDelete(id) {
+    setRows(prev => prev.filter(r => r.id !== id));
     setOpenMenu(null);
   }
 
   function handleNew() {
-    router.push('/receipts/new');
+    router.push('/dashboard/receipts/new');
+  }
+
+  function handleViewReceipt(id) {
+    router.push(`/dashboard/receipts/${id}`);
   }
 
   return (
@@ -217,9 +219,13 @@ export default function ReceiptsPage() {
               </thead>
               <tbody>
                 {filteredRows.map((r, i) => (
-                  <tr key={r.reference} className={`transition-all duration-200 ${i % 2 === 0 ? 'bg-slate-900/10' : ''} hover:bg-slate-800/50 cursor-pointer`}>
+                  <tr 
+                    key={r.id} 
+                    onClick={() => handleViewReceipt(r.id)}
+                    className={`transition-all duration-200 ${i % 2 === 0 ? 'bg-slate-900/10' : ''} hover:bg-slate-800/50 cursor-pointer`}
+                  >
                     <td className="px-4 py-4 font-semibold text-white whitespace-nowrap">{r.reference}</td>
-                    <td className="px-4 py-4 text-slate-300 whitespace-nowrap">{r.from}</td>
+                    <td className="px-4 py-4 text-slate-300 whitespace-nowrap capitalize">{r.from}</td>
                     <td className="px-4 py-4 text-slate-300 whitespace-nowrap">{r.to}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -236,16 +242,16 @@ export default function ReceiptsPage() {
                         <span className="text-slate-200 font-medium">{r.schedule}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-3">
                         <StatusBadge status={r.status} />
                         <div className="relative">
-                          <button onClick={()=>setOpenMenu(openMenu===r.reference?null:r.reference)} className="p-2 text-slate-400 hover:text-white rounded-md"><MoreHorizontal className="w-4 h-4" /></button>
-                          {openMenu===r.reference && (
+                          <button onClick={()=>setOpenMenu(openMenu===r.id?null:r.id)} className="p-2 text-slate-400 hover:text-white rounded-md"><MoreHorizontal className="w-4 h-4" /></button>
+                          {openMenu===r.id && (
                             <div className="absolute right-0 mt-2 w-36 bg-slate-900 border border-slate-800 rounded shadow-lg z-50">
-                              <button onClick={()=>{router.push(`/receipts/${r.reference}`)}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">View</button>
-                              <button onClick={()=>{router.push(`/receipts/${r.reference}/edit`)}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">Edit</button>
-                              <button onClick={()=>handleDelete(r.reference)} className="w-full text-left px-3 py-2 text-sm text-rose-400 hover:bg-slate-800">Delete</button>
+                              <button onClick={()=>{handleViewReceipt(r.id); setOpenMenu(null);}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">View</button>
+                              <button onClick={()=>{router.push(`/dashboard/receipts/${r.id}/edit`); setOpenMenu(null);}} className="w-full text-left px-3 py-2 text-sm hover:bg-slate-800">Edit</button>
+                              <button onClick={()=>handleDelete(r.id)} className="w-full text-left px-3 py-2 text-sm text-rose-400 hover:bg-slate-800">Delete</button>
                             </div>
                           )}
                         </div>

@@ -19,6 +19,6 @@ const UserSchema = new mongoose.Schema({
     enum: ['admin', 'manager', 'staff'],
     default: 'staff'
   }
-}, { timestamps: true })
+}, { timestamps: true })  
 
 export default mongoose.models.User || mongoose.model('User', UserSchema)
