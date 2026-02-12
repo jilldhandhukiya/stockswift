@@ -1,5 +1,4 @@
 "use client";
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -16,8 +15,6 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// --- Premium UI Components (Matte Finish) ---
 
 const PremiumCard = ({ children, className = "" }) => (
   <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl overflow-hidden hover:border-indigo-500/30 transition-colors duration-300 ${className}`}>
